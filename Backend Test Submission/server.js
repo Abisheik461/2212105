@@ -1,9 +1,7 @@
-// server.js
 const express = require("express");
 const { v4: uuidv4 } = require("uuid");
 const bodyParser = require("body-parser");
 
-// Optional logging middleware
 let Log;
 try {
   ({ Log } = require("../Logging Middleware/logging"));
@@ -14,14 +12,12 @@ try {
 const app = express();
 app.use(bodyParser.json());
 
-/* ---------- CONFIG ---------- */
 const PORT = 3001;
 const HOSTNAME = `http://localhost:${PORT}`;
 
-/* ---------- IN-MEMORY DB ---------- */
-const urlStore = {}; // { shortcode: { longUrl, expiry, createdAt, clicks, stats[] } }
+const urlStore = {}; 
 
-/* ---------- HELPERS ---------- */
+
 function generateShortcode() {
   return Math.random().toString(36).substring(2, 8);
 }
@@ -35,7 +31,6 @@ function isValidURL(str) {
   }
 }
 
-// Middleware to check auth token
 function authenticate(req, res, next) {
   const authHeader = req.headers["authorization"];
   if (!authHeader || authHeader !== `Bearer ${TOKEN}`) {
@@ -44,9 +39,7 @@ function authenticate(req, res, next) {
   next();
 }
 
-/* ---------- API ENDPOINTS ---------- */
 
-// Create Short URL (protected)
 app.post("/shorturls", authenticate, async (req, res) => {
   const { url, validity, shortcode } = req.body;
 
@@ -79,7 +72,6 @@ app.post("/shorturls", authenticate, async (req, res) => {
   });
 });
 
-// Redirect
 app.get("/r/:code", async (req, res) => {
   const { code } = req.params;
   const record = urlStore[code];
@@ -93,7 +85,6 @@ app.get("/r/:code", async (req, res) => {
     return res.status(410).json({ error: "Link expired" });
   }
 
-  // track click
   record.clicks += 1;
   record.stats.push({
     timestamp: new Date(),
@@ -104,7 +95,6 @@ app.get("/r/:code", async (req, res) => {
   res.redirect(record.longUrl);
 });
 
-// Stats (protected)
 app.get("/shorturls/:code/stats", authenticate, (req, res) => {
   const { code } = req.params;
   const record = urlStore[code];
@@ -123,7 +113,6 @@ app.get("/shorturls/:code/stats", authenticate, (req, res) => {
   });
 });
 
-/* ---------- START SERVER ---------- */
 app.listen(PORT, () => {
   console.log(`Server running at ${HOSTNAME}`);
 });

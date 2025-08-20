@@ -7,7 +7,6 @@ const { Log } = require('./logging');
 
 
 
-// Routes
 app.get("/error", async (req, res) => {
   const result = await Log("backend", "error", "handler", "received string, expected bool");
   res.status(500).json(result); 
